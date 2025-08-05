@@ -1,0 +1,37 @@
+{
+  "name": "class-minify",
+  "version": "1.0.0",
+  "description": "An NPM tool to shorten and minify CSS class names across HTML/CSS/JS projects.",
+  "bin": {
+    "classminify": "bin/index.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "start": "node dist/bin/index.js"
+  },
+  "keywords": [
+    "css",
+    "minify",
+    "class",
+    "shorten",
+    "obfuscate",
+    "vite",
+    "postcss",
+    "tailwind"
+  ],
+  "author": "Muhammad",
+  "license": "MIT",
+  "packageManager": "pnpm@10.14.0",
+  "devDependencies": {
+    "@types/node": "^24.2.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "fast-glob": "^3.3.3"
+  }
+}
