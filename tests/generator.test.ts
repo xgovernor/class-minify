@@ -1,4 +1,4 @@
-import { ClassNameGenerator } from ".";
+import { ClassNameGenerator } from "../src/generator";
 import { expect, it } from "vitest";
 
 const generator = new ClassNameGenerator();
