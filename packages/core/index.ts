@@ -1,0 +1,1 @@
+export { ClassNameGenerator } from "./generator";

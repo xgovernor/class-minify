@@ -3,11 +3,11 @@ import path from "path";
 import fs from "fs/promises";
 
 // We'll mock runClassMinify and dynamic import
-vi.mock("../src/runner", () => ({
+vi.mock("./../packages/core/runner", () => ({
   runClassMinify: vi.fn().mockResolvedValue(undefined),
 }));
 
-const binPath = path.resolve(__dirname, "../bin/index.ts");
+const binPath = path.resolve(__dirname, "./../bin/index.ts");
 
 // Helper to run the CLI script with node --require ts-node/register
 async function runBin(
@@ -23,7 +23,10 @@ async function runBin(
 describe("bin/index.ts CLI", () => {
   it("loads config and runs without error", async () => {
     // Create a temp config file
-    const configPath = path.resolve(__dirname, "../example/cli-config.ts");
+    const configPath = path.resolve(
+      __dirname,
+      "./../example//cssminify.config.ts"
+    );
     await fs.writeFile(configPath, "export default { include: ['foo'] }");
     // Run the CLI
     const result = await runBin(["--config", configPath]);
@@ -37,7 +40,7 @@ describe("bin/index.ts CLI", () => {
   });
 
   it("exits with error if config import fails", async () => {
-    const badPath = path.resolve(__dirname, "../example/bad-config.ts");
+    const badPath = path.resolve(__dirname, "./../example/bad-config.ts");
     await fs.writeFile(badPath, "throw new Error('fail')");
     const result = await runBin(["--config", badPath]).catch((e) => e);
     expect(result.stderr).toMatch(/Error loading config/);

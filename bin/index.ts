@@ -1,7 +1,7 @@
 #!/user/bin/env node
 
 import path from "path";
-import { runClassMinify } from "../src/runner";
+import { runClassMinify } from "../packages/core/runner";
 
 // Simple CLI arg parsing
 const args = process.argv.slice(2);

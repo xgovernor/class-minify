@@ -1,4 +1,4 @@
-import { runClassMinify, RunnerOptions } from "../src/runner";
+import { runClassMinify, RunnerOptions } from "../core/runner";
 
 export interface ClassMinifyVitePluginOptions extends RunnerOptions {}
 
