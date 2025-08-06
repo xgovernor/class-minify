@@ -24,7 +24,7 @@ export function replaceHtmlClasses(
         const original = groups?.value ?? "";
         const replaced = original
           .split(/\s+/)
-          .map((cls) => classMap.get(cls) || cls)
+          .map((cls: string) => classMap.get(cls) || cls)
           .join(" ");
 
         return `${prefix}${quote}${replaced}${quoteEnd}`;
