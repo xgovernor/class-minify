@@ -1,42 +1,100 @@
-import { describe, expect, it } from "vitest";
-import { replaceClassesInFile } from "../src/replacer";
-import path from "path";
+import { describe, it, expect, vi } from "vitest";
+import { replaceClasses } from "../packages/core/replacer/index";
 
-describe("replaceClassesInFile", () => {
-  const classMap = new Map([
-    ["foo", "a"],
-    ["bar-baz", "b"],
-    ["qux", "c"],
-    ["alpha", "d"],
-    ["beta", "e"],
-    ["tsclass", "f"],
-    ["anotherClass", "g"],
-  ]);
+describe("replaceClasses", () => {
+  it("replaces CSS classes for style extensions", () => {
+    const input = {
+      content: `.old-class { color: red; }`,
+      extension: ".css",
+      classMap: new Map([
+        ["old-class", "a"],
+        ["another-class", "b"],
+      ]),
+    };
+    const output = `.a { color: red; }`;
+    const result = replaceClasses(
+      input.content,
+      input.extension,
+      input.classMap
+    );
 
-  it("replaces classes in HTML files", () => {
-    const html = `<div class=\"foo bar-baz qux\"></div>\n<span class='alpha beta'></span>`;
-    const result = replaceClassesInFile(html, "sample.html", classMap);
-    expect(result).toContain('class="a b c"');
-    expect(result).toContain("class='d e'");
+    expect(result).toBe(output);
   });
 
-  it("replaces classes in CSS files", () => {
-    const css = `.foo { color: red; }\n.bar-baz { color: blue; }\n.qux {}`;
-    const result = replaceClassesInFile(css, "sample.css", classMap);
-    expect(result).toContain(".a {");
-    expect(result).toContain(".b {");
-    expect(result).toContain(".c {");
+  // Need to add other JS and TS cases
+  it("replaces JavaScript classes for script extensions", () => {
+    const input = {
+      content: `const element = document.querySelector('.old-class'); element.classList.add('another-class');`,
+      extension: ".js",
+      classMap: new Map([
+        ["old-class", "a"],
+        ["another-class", "b"],
+      ]),
+    };
+    const output = `document.querySelector('.a').classList.add('.b');`;
+    const result = replaceClasses(
+      input.content,
+      input.extension,
+      input.classMap
+    );
+
+    expect(result).toBe(output);
   });
 
-  it("replaces classes in TSX files", () => {
-    const tsx = `export default function Demo() {\n  return <div className=\"tsclass anotherClass\"></div>;\n}`;
-    const result = replaceClassesInFile(tsx, "sample.tsx", classMap);
-    expect(result).toContain('className="f g"');
+  it("replaces TypeScript classes for script extensions", () => {
+    const input = {
+      content: `const element: HTMLElement = document.createElement('div'); element.className = 'old-class another-class';`,
+      extension: ".ts",
+      classMap: new Map([
+        ["old-class", "a"],
+        ["another-class", "b"],
+      ]),
+    };
+    const output = `const element: HTMLElement = document.createElement('div'); element.className = 'a b';`;
+    const result = replaceClasses(
+      input.content,
+      input.extension,
+      input.classMap
+    );
+
+    expect(result).toBe(output);
   });
 
-  it("returns content unchanged for unsupported file types", () => {
-    const txt = "Just some text.";
-    const result = replaceClassesInFile(txt, "sample.txt", classMap);
-    expect(result).toBe(txt);
+  it("replaces JSX classes for script extensions", () => {
+    const input = {
+      content: `<div className='old-class another-class'></div>`,
+      extension: ".jsx",
+      classMap: new Map([
+        ["old-class", "a"],
+        ["another-class", "b"],
+      ]),
+    };
+    const output = `<div className='a b'></div>`;
+    const result = replaceClasses(
+      input.content,
+      input.extension,
+      input.classMap
+    );
+
+    expect(result).toBe(output);
+  });
+
+  it("replaces TSX classes for script extensions", () => {
+    const input = {
+      content: `<div className='old-class another-class'></div>`,
+      extension: ".tsx",
+      classMap: new Map([
+        ["old-class", "a"],
+        ["another-class", "b"],
+      ]),
+    };
+    const output = `<div className='a b'></div>`;
+    const result = replaceClasses(
+      input.content,
+      input.extension,
+      input.classMap
+    );
+
+    expect(result).toBe(output);
   });
 });

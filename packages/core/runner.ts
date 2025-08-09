@@ -1,67 +1,89 @@
 import FastGlob from "fast-glob";
-import { extractAllClasses } from "./extractor";
+import { extractClasses } from "./extractor";
 import { ClassNameGenerator } from "./generator";
 import fs from "fs/promises";
-import { replaceClassesInFile } from "./replacer";
+import { replaceClasses } from "./replacer";
+import defineConfig, { ClassMinifyConfigOptions } from "./config";
+import path from "path";
 
-export interface RunnerOptions {
-  include: string[];
-  exclude?: string[];
-  dryRun?: boolean; // If true, don't overwrite files
-  generateMap?: boolean; // If true, generate a class map file
-  outputMapPath?: string; // Path to save the class map file
-  reserved?: string[]; // Classes that should not be replaced
-}
-
-export async function runClassMinify(options: RunnerOptions) {
+export async function runClassMinify(
+  options: Partial<ClassMinifyConfigOptions>
+) {
   const {
     include,
-    exclude = [],
-    dryRun = false,
-    generateMap = false,
-    outputMapPath = "classmap.json",
-    reserved = [],
-  } = options;
-
-  const generator = new ClassNameGenerator();
-
-  const allClasses = await extractAllClasses(include, exclude);
-  const filteredClasses = Array.from(allClasses).filter(
-    (c) => !reserved.includes(c)
-  );
-
+    exclude,
+    reserved: reservedKeywords,
+    dryRun,
+    generateMap,
+    outputMapPath,
+    strategy,
+    // minLength,
+    prefix,
+  } = defineConfig(options);
+  const allClasses = new Set<string>();
   const classMap = new Map<string, string>();
-  for (const cls of filteredClasses) {
-    const short = generator.next();
-    classMap.set(cls, short);
+  const generator = new ClassNameGenerator(prefix, strategy);
+
+  if (!include || include.length === 0) {
+    throw new Error("No files specified in 'include' option.");
   }
 
-  // Add reserved classes 1-to-1 mapping
-  for (const cls of reserved) {
-    if (!classMap.has(cls)) {
-      classMap.set(cls, cls);
+  if (dryRun) {
+    console.log("⚠️  Dry run mode enabled. No files will be modified.");
+  }
+
+  // Reading files and extracting classes
+  const files = await FastGlob(include, { ignore: exclude });
+  if (files.length === 0) {
+    console.warn("⚠️  No files matched the include patterns.");
+    return;
+  }
+
+  for (const file of files) {
+    const ext = path.extname(file);
+    const content = await fs.readFile(file, { encoding: "utf-8" });
+    const extracted = extractClasses(content, ext);
+
+    for (const cls of extracted) {
+      if (
+        cls &&
+        cls.trim() &&
+        !reservedKeywords.has(cls) &&
+        !classMap.has(cls)
+      ) {
+        const minified = generator.next();
+        classMap.set(cls, minified);
+      }
     }
   }
 
   // Replace classes in all matched files
-  const files = await FastGlob(include, { ignore: exclude });
-
   for (const file of files) {
-    const content = await fs.readFile(file, { encoding: "utf-8" });
-    const updated = replaceClassesInFile(content, file, classMap);
+    const ext = path.extname(file);
+    const content = await fs.readFile(file, "utf-8");
+    const updated = replaceClasses(content, ext, classMap);
 
-    if (!dryRun && updated !== content) {
-      await fs.writeFile(file, updated, { encoding: "utf-8" });
-      console.log(`Updated: ${file}`);
+    if (dryRun) {
+      if (updated !== content) {
+        console.log(`🔍 Dry run: ${file}`);
+        console.log("Preview of changes:\n", updated);
+      }
+    } else {
+      if (updated !== content) {
+        await fs.writeFile(file, updated, "utf-8");
+        console.log(`✅ Updated: ${file}`);
+      }
     }
   }
 
-  // Save class map
+  // Output class mapping
   if (generateMap) {
-    const obj = Object.fromEntries(classMap);
-    await fs.writeFile(outputMapPath, JSON.stringify(obj, null, 2), {
-      encoding: "utf-8",
-    });
-    console.log(`Class map saved to: ${outputMapPath}`);
+    const outputMap = Object.fromEntries(classMap.entries());
+    await fs.writeFile(
+      outputMapPath,
+      JSON.stringify(outputMap, null, 2),
+      "utf-8"
+    );
+    console.log(`📦 Class map saved to: ${outputMapPath}`);
   }
 }

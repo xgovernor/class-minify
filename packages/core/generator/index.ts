@@ -4,15 +4,25 @@ export class ClassNameGenerator {
   private index: number = 0;
   private generated = new Set<string>();
 
-  next(): string {
-    while (true) {
-      const name = this.generateName(this.index++);
+  constructor(
+    private prefix: string = "",
+    private strategy: "deterministic",
+    private suffix: string = "" // private minLength: number = 1
+  ) {}
 
-      if (!this.generated.has(name)) {
-        this.generated.add(name);
-        return name;
+  next(): string {
+    while (this.index <= Number.MAX_SAFE_INTEGER) {
+      if (this.strategy === "deterministic") {
+        const name = this.generateName(this.index++);
+
+        if (!this.generated.has(name)) {
+          this.generated.add(name);
+          return `${this.prefix}${name}${this.suffix}`;
+        }
       }
     }
+
+    throw new Error("ClassNameGenerator: Exceeded maximum index limit.");
   }
 
   private generateName(index: number): string {

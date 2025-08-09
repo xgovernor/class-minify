@@ -1,43 +1,18 @@
-import FastGlob from "fast-glob";
-import path from "path";
-import fs from "fs/promises";
 import { extractHtmlClasses } from "./html-extractor";
 import { extractCssClasses } from "./css-extractor";
+import { supportedScriptExtensions, supportedStyleExtensions } from "..";
 
-export async function extractAllClasses(
-  globs: string[],
-  exclude: string[] = []
-): Promise<Set<string>> {
-  const files = await FastGlob(globs, { ignore: exclude });
-  const allClasses = new Set<string>();
+export function extractClasses(content: string, ext: string): Set<string> {
+  const normalizedExt = ext.toLowerCase();
 
-  for (const file of files) {
-    const ext = path.extname(file);
-    const content = await fs.readFile(file, "utf-8");
-
-    let found: Set<string>;
-
-    if (
-      [
-        ".html",
-        ".js",
-        ".ts",
-        ".js",
-        ".tsx",
-        ".jsx",
-        ".vue",
-        ".svelte",
-      ].includes(ext)
-    ) {
-      found = extractHtmlClasses(content);
-    } else if ([".css", ".scss", ".less"].includes(ext)) {
-      found = extractCssClasses(content);
-    } else {
-      continue; // Skip unsupported file types
-    }
-
-    found?.forEach((cls) => allClasses.add(cls));
+  if (supportedScriptExtensions.has(normalizedExt)) {
+    return extractHtmlClasses(content);
   }
 
-  return allClasses;
+  if (supportedStyleExtensions.has(normalizedExt)) {
+    return extractCssClasses(content);
+  }
+
+  console.warn(`ClassMinify: Skipped file with unsupported extension '${ext}'`);
+  return new Set();
 }

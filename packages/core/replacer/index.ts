@@ -1,23 +1,22 @@
-import path from "path";
-import { replaceHtmlClasses } from "./html-replacer";
+import { supportedScriptExtensions, supportedStyleExtensions } from "..";
 import { replaceCssClasses } from "./css-replacer";
+import { replaceHtmlClasses } from "./html-replacer";
 
-export function replaceClassesInFile(
+export function replaceClasses(
   content: string,
-  filepath: string,
+  ext: string,
   classMap: Map<string, string>
 ): string {
-  const ext = path.extname(filepath);
+  const normalizedExt = ext.toLowerCase();
 
-  if (
-    [".html", ".js", ".ts", ".js", ".tsx", ".jsx", ".vue", ".svelte"].includes(
-      ext
-    )
-  ) {
+  if (supportedScriptExtensions.has(normalizedExt)) {
     return replaceHtmlClasses(content, classMap);
-  } else if ([".css", ".scss", ".less"].includes(ext)) {
+  }
+
+  if (supportedStyleExtensions.has(normalizedExt)) {
     return replaceCssClasses(content, classMap);
   }
 
-  return content; // Return unchanged for unsupported file types
+  console.warn(`ClassMinify: Skipped file with unsupported extension '${ext}'`);
+  return content;
 }
