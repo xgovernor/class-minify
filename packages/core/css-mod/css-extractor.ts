@@ -39,7 +39,7 @@ const normalizeContent = (content: string): string => {
 
   // Remove pseudo-class variants
   for (const pseudo of RESERVED_PSEUDO_CLASSES) {
-    const fullRegexString = `:${pseudo}(?![a-zA-Z0-9_-])`;
+    const fullRegexString = `:${pseudo}`;
     // Match :hover, :focus, etc., but NOT escaped Tailwind variants like hover\:
     const re = new RegExp(fullRegexString, "g");
     content = content.replace(re, "");
